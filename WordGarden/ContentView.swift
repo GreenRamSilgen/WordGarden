@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AVFAudio
 
 struct ContentView: View {
     private static let maximumGuesses = 8
@@ -24,6 +25,7 @@ struct ContentView: View {
     @State private var playAgainHidden = true
     @State private var playAgainButtonLabel = "Another Word?"
     @State private var revealedWord = ""
+    @State private var audioPlayer : AVAudioPlayer!
     
     @FocusState private var isKeyboardFocused
     
@@ -117,6 +119,7 @@ struct ContentView: View {
             Image(imageName)
                 .resizable()
                 .scaledToFit()
+                .animation(.easeIn(duration: 0.75), value: imageName)
             Spacer()
         }
         .ignoresSafeArea(edges:.bottom)
@@ -135,22 +138,33 @@ struct ContentView: View {
     }
     
     func updateGameplay(){
+        // Player guess a wrong LETTER
         if !wordToGuess.contains(guessedLetter) {
             guessesRemaining -= 1
-            imageName = "flower\(guessesRemaining)"
+            imageName = "wilt\(guessesRemaining)"
+            playSound("incorrect")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) {
+                imageName = "flower\(guessesRemaining)"
+            }
+        }else {
+            //TODO: - Fix issue where player guessing same letter over and over is allowed... -
+            playSound("correct")
         }
         
+        // Player guessed the WORD correctly
         if !revealedWord.contains("_") {
             gameStatusMessage = "You Guessed It! It Took You \(lettersGuessed.count) Guesses to Guess the Word."
             wordsGuessed += 1
             currentWordIndex += 1
             playAgainHidden = false
+            playSound("word-guessed")
         }
-        else if guessesRemaining == 0 { // Word missed
+        else if guessesRemaining == 0 { // MISSED WORD, OUT OF GUESSES
             gameStatusMessage = "So Sorry, You're All Out of Guesses"
             wordsMissed += 1
             currentWordIndex += 1
             playAgainHidden = false
+            playSound("word-not-guessed")
         }
         else {
             //TODO: Redo this with LocalizedStringKey & Inflect
@@ -162,6 +176,19 @@ struct ContentView: View {
             gameStatusMessage = gameStatusMessage + "\nYou've Tried All the Words. Restart from the Beginning?"
         }
         guessedLetter = ""
+    }
+    
+    func playSound(_ soundName : String){
+        if audioPlayer != nil && audioPlayer.isPlaying {
+            audioPlayer.stop()
+        }
+        guard let soundFile = NSDataAsset(name: soundName) else { return }
+        do {
+            audioPlayer = try AVAudioPlayer(data: soundFile.data)
+            audioPlayer.play()
+        } catch {
+            fatalError()
+        }
     }
 }
 
