@@ -12,6 +12,7 @@ struct ContentView: View {
     private static let maximumGuesses = 8
     
     private let wordsToGuess = ["SWIFT", "CAT", "DOG"]
+    private let possibleLetters = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z"]
     
     @State private var wordsGuessed = 0
     @State private var wordsMissed = 0
@@ -59,40 +60,72 @@ struct ContentView: View {
             Text(revealedWord)
             
             if playAgainHidden {
-                HStack {
-                    TextField("", text: $guessedLetter)
-                        .focused($isKeyboardFocused)
-                        .textFieldStyle(.roundedBorder)
-                        .frame(width: 30)
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 5)
-                                .stroke(.gray, lineWidth: 2)
-                        }
-                        .keyboardType(.asciiCapable)
-                        .submitLabel(.done)
-                        .autocorrectionDisabled()
-                        .textInputAutocapitalization(.characters)
-                        .onChange(of: guessedLetter) {
-                            guessedLetter = guessedLetter.trimmingCharacters(in: .letters.inverted)
-                            guard let lastChar = guessedLetter.last else { return }
-                            
-                            guessedLetter = String(lastChar).uppercased()
-                        }
-                        .onSubmit {
-                            guard guessedLetter != "" else { return }
-                            guessALetter()
-                            updateGameplay()
+                
+                Grid(alignment: .center, horizontalSpacing: 10.0, verticalSpacing: 10.0) {
+                        ForEach(0..<3){ row in
+                            GridRow {
+                                ForEach((row*7)..<((row*7)+7), id: \.self) { idx in
+                                    Button(possibleLetters[idx]) {
+                                        guessedLetter = possibleLetters[idx]
+                                        guessALetter()
+                                        updateGameplay()
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .tint(.mint)
+                                    .disabled(lettersGuessed.contains(possibleLetters[idx]))
+                                }
+                            }
                         }
                     
-                    Button("Guess A Letter") {
-                        guard guessedLetter != "" else { return }
-                        guessALetter()
-                        updateGameplay()
+                            GridRow(alignment: .center) {
+                                ForEach(22..<26){ idx in
+                                    Button(possibleLetters[idx]) {
+                                        guessedLetter = possibleLetters[idx]
+                                        guessALetter()
+                                        updateGameplay()
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .tint(.mint)
+                                    .disabled(lettersGuessed.contains(possibleLetters[idx]))
+                                }
+                            }
+                        
                     }
-                    .buttonStyle(.bordered)
-                    .tint(.mint)
-                    .disabled(guessedLetter.isEmpty)
-                }
+                
+                //                HStack {
+                //                    TextField("", text: $guessedLetter)
+                //                        .focused($isKeyboardFocused)
+                //                        .textFieldStyle(.roundedBorder)
+                //                        .frame(width: 30)
+                //                        .overlay {
+                //                            RoundedRectangle(cornerRadius: 5)
+                //                                .stroke(.gray, lineWidth: 2)
+                //                        }
+                //                        .keyboardType(.asciiCapable)
+                //                        .submitLabel(.done)
+                //                        .autocorrectionDisabled()
+                //                        .textInputAutocapitalization(.characters)
+                //                        .onChange(of: guessedLetter) {
+                //                            guessedLetter = guessedLetter.trimmingCharacters(in: .letters.inverted)
+                //                            guard let lastChar = guessedLetter.last else { return }
+                //
+                //                            guessedLetter = String(lastChar).uppercased()
+                //                        }
+                //                        .onSubmit {
+                //                            guard guessedLetter != "" else { return }
+                //                            guessALetter()
+                //                            updateGameplay()
+                //                        }
+                //
+                //                    Button("Guess A Letter") {
+                //                        guard guessedLetter != "" else { return }
+                //                        guessALetter()
+                //                        updateGameplay()
+                //                    }
+                //                    .buttonStyle(.bordered)
+                //                    .tint(.mint)
+                //                    .disabled(guessedLetter.isEmpty)
+                //                }
             }
             else {
                 Button(playAgainButtonLabel) {
